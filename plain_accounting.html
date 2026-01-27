@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>极简记账</title>
+    <link rel="stylesheet" href="plain_style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- 顶部概览区 -->
+        <header class="app-header">
+            <div class="balance-card">
+                <span class="label">本月结余</span>
+                <h1 id="total-balance">¥ 0.00</h1>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="s-label">本月支出</span>
+                        <span id="monthly-expense" class="s-value expense">0.00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="s-label">本月收入</span>
+                        <span id="monthly-income" class="s-value income">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 历史记录区 -->
+        <main class="history-section">
+            <div id="empty-state" class="empty-state">
+                <p>暂时没有记录，开启你的第一笔账单吧</p>
+            </div>
+            <div id="records-list" class="records-list">
+                <!-- 记录项将通过 JS 动态渲染 -->
+            </div>
+        </main>
+
+        <!-- 悬浮添加按钮 -->
+        <button id="add-trigger" class="add-fab">+</button>
+
+        <!-- 新增账目抽屉 -->
+        <div id="modal-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>记一笔</h2>
+                    <button id="close-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="form-container">
+                    <div class="type-selector">
+                        <button class="type-btn active" data-type="expense">支出</button>
+                        <button class="type-btn" data-type="income">收入</button>
+                    </div>
+                    <div class="input-group">
+                        <span class="currency">¥</span>
+                        <input type="number" id="amount-input" placeholder="0.00" step="0.01" autofocus>
+                    </div>
+                    <div class="input-group note">
+                        <input type="text" id="note-input" placeholder="备注（可选）">
+                    </div>
+                    <button id="save-btn" class="save-btn">确认记录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="plain_app.js"></script>
+</body>
+
+</html>

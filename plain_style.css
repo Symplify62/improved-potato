@@ -1,0 +1,305 @@
+:root {
+    --bg-color: #f8f8f8;
+    --card-bg: #ffffff;
+    --text-main: #1a1a1a;
+    --text-sec: #999999;
+    --accent: #000000;
+    --expense: #ff4d4f;
+    --income: #52c41a;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+.app-container {
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.02);
+}
+
+/* Header Section */
+.app-header {
+    padding: 40px 24px 20px;
+    background: #fff;
+}
+
+.balance-card {
+    text-align: center;
+}
+
+.balance-card .label {
+    font-size: 13px;
+    color: var(--text-sec);
+    letter-spacing: 0.5px;
+}
+
+.balance-card h1 {
+    font-size: 36px;
+    font-weight: 300;
+    margin: 8px 0 24px;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.s-label {
+    font-size: 11px;
+    color: var(--text-sec);
+    margin-bottom: 4px;
+}
+
+.s-value {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.s-value.expense { color: var(--expense); }
+.s-value.income { color: var(--income); }
+
+/* History Section */
+.history-section {
+    padding: 10px 24px 100px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 0;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.records-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #f7f7f7;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.record-info .note {
+    font-size: 15px;
+    color: var(--text-main);
+}
+
+.record-info .date {
+    font-size: 12px;
+    color: var(--text-sec);
+    display: block;
+    margin-top: 2px;
+}
+
+.record-amount {
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.record-amount.expense { color: var(--text-main); }
+.record-amount.income { color: var(--income); }
+
+.delete-btn {
+    border: none;
+    background: none;
+    color: #eee;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.record-item:hover .delete-btn { color: #ffbcbc; }
+
+/* Floating Button */
+.add-fab {
+    position: fixed;
+    bottom: 80px;
+    right: 48px;
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    background: #000;
+    color: #fff;
+    border: none;
+    font-size: 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    cursor: pointer;
+    z-index: 100;
+    transition: var(--transition);
+}
+
+@media (min-width: 500px) {
+    .add-fab {
+        right: calc(50% - 202px);
+    }
+}
+
+.add-fab:active {
+    transform: scale(0.9);
+}
+
+/* Modal Drawer */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 30px 24px 50px;
+    transform: translateX(-50%) translateY(100%);
+    transition: var(--transition);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateX(-50%) translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.modal-header h2 {
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.type-selector {
+    display: flex;
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 30px;
+}
+
+.type-btn {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    background: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #666;
+    transition: 0.2s;
+}
+
+.type-btn.active {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+    margin-bottom: 20px;
+}
+
+.input-group.note {
+    border-bottom-color: #f5f5f5;
+}
+
+.currency {
+    font-size: 24px;
+    font-weight: 500;
+    margin-right: 12px;
+}
+
+input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 16px;
+}
+
+#amount-input {
+    font-size: 32px;
+    font-weight: 300;
+}
+
+.save-btn {
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 16px;
+    border-radius: 15px;
+    font-size: 16px;
+    font-weight: 500;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.save-btn:active {
+    opacity: 0.8;
+}

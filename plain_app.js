@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Supabase 客户端 ---
-    // 动态获取 supabase 客户端，因为可能在脚本加载时还没初始化
     function getSupabase() {
         return window.supabaseClient;
     }
@@ -8,8 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 状态 ---
     let records = [];
     let currentType = 'expense';
-    let currentUser = null;
-    let isLoginMode = true; // true = 登录, false = 注册
+    let currentUser = null; // { id, username }
 
     // --- DOM 元素 ---
     const els = {
@@ -52,46 +50,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // --- 用户认证 ---
+    function showSuccess(msg) {
+        els.authError.style.background = '#f6ffed';
+        els.authError.style.borderColor = '#b7eb8f';
+        els.authError.style.color = '#52c41a';
+        els.authError.textContent = msg;
+        els.authError.style.display = 'block';
+        setTimeout(() => {
+            els.authError.style.display = 'none';
+            els.authError.style.background = '';
+            els.authError.style.borderColor = '';
+            els.authError.style.color = '';
+        }, 3000);
+    }
 
-    // 初始化认证状态监听
-    async function initAuth() {
-        const supabase = getSupabase();
-        if (!supabase) {
-            console.error('Supabase 客户端未初始化');
-            loadRecordsFromLocal();
-            return;
-        }
+    // --- 用户认证（自建用户表版本）---
 
-        // 检查当前会话
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            currentUser = session.user;
+    // 初始化：检查本地是否有保存的登录状态
+    function initAuth() {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
             updateUserUI();
-            await loadRecordsFromSupabase();
+            loadRecordsFromSupabase();
         } else {
             loadRecordsFromLocal();
         }
-
-        // 监听认证状态变化
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                currentUser = session.user;
-                updateUserUI();
-                // 登录后同步本地数据到云端，然后加载云端数据
-                await syncLocalToCloud();
-                await loadRecordsFromSupabase();
-            } else if (event === 'SIGNED_OUT') {
-                currentUser = null;
-                updateUserUI();
-                loadRecordsFromLocal();
-            }
-        });
     }
 
     function updateUserUI() {
         if (currentUser) {
-            els.userInfo.textContent = currentUser.email;
+            els.userInfo.textContent = currentUser.username;
             els.authBtn.textContent = '退出';
         } else {
             els.userInfo.textContent = '未登录（数据仅保存在本地）';
@@ -99,50 +88,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 登录
-    async function signIn(email, password) {
+    // 注册 - 向 users 表插入新用户
+    async function signUp(username, password) {
         const supabase = getSupabase();
         if (!supabase) {
             showError('连接失败，请刷新页面重试');
             return false;
         }
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-        if (error) {
-            showError(error.message);
+
+        // 检查用户名是否已存在
+        const { data: existing } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', username)
+            .single();
+
+        if (existing) {
+            showError('用户名已存在');
             return false;
         }
+
+        // 插入新用户
+        const { data, error } = await supabase
+            .from('users')
+            .insert({ username, password })
+            .select()
+            .single();
+
+        if (error) {
+            showError('注册失败：' + error.message);
+            return false;
+        }
+
+        showSuccess('注册成功！请登录。');
         return true;
     }
 
-    // 注册
-    async function signUp(email, password) {
+    // 登录 - 查询 users 表验证
+    async function signIn(username, password) {
         const supabase = getSupabase();
         if (!supabase) {
             showError('连接失败，请刷新页面重试');
             return false;
         }
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password
-        });
-        if (error) {
-            showError(error.message);
+
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, username')
+            .eq('username', username)
+            .eq('password', password)
+            .single();
+
+        if (error || !data) {
+            showError('用户名或密码错误');
             return false;
         }
-        // 提示用户检查邮箱确认
-        showError('注册成功！请查看邮箱完成验证。');
+
+        // 登录成功，保存状态
+        currentUser = { id: data.id, username: data.username };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        updateUserUI();
+
+        // 同步本地数据到云端，然后加载云端数据
+        await syncLocalToCloud();
+        await loadRecordsFromSupabase();
+
         return true;
     }
 
     // 登出
-    async function signOut() {
-        const supabase = getSupabase();
-        if (supabase) {
-            await supabase.auth.signOut();
-        }
+    function signOut() {
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        updateUserUI();
+        loadRecordsFromLocal();
     }
 
     // --- 数据操作 ---
@@ -156,11 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 从 Supabase 加载（已登录时使用）
     async function loadRecordsFromSupabase() {
         const supabase = getSupabase();
-        if (!supabase) return;
+        if (!supabase || !currentUser) return;
 
         const { data, error } = await supabase
             .from('records')
             .select('*')
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -181,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 将本地数据同步到云端（首次登录时）
     async function syncLocalToCloud() {
         const supabase = getSupabase();
-        if (!supabase) return;
+        if (!supabase || !currentUser) return;
 
         const localRecords = JSON.parse(localStorage.getItem('accounting_records')) || [];
         if (localRecords.length === 0) return;
@@ -345,12 +365,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 认证相关事件 ---
+    let isLoginMode = true;
 
     // 打开认证模态框
-    els.authBtn.addEventListener('click', async () => {
+    els.authBtn.addEventListener('click', () => {
         if (currentUser) {
             // 已登录，执行退出
-            await signOut();
+            signOut();
         } else {
             // 未登录，打开登录弹窗
             isLoginMode = true;
@@ -398,11 +419,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 提交登录/注册
     els.authSubmit.addEventListener('click', async () => {
-        const email = els.emailInput.value.trim();
+        const username = els.emailInput.value.trim();
         const password = els.passwordInput.value;
 
-        if (!email || !password) {
-            showError('请填写邮箱和密码');
+        if (!username || !password) {
+            showError('请填写用户名和密码');
             return;
         }
 
@@ -413,15 +434,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let success;
         if (isLoginMode) {
-            success = await signIn(email, password);
+            success = await signIn(username, password);
+            if (success) {
+                els.authModal.classList.remove('active');
+                els.emailInput.value = '';
+                els.passwordInput.value = '';
+            }
         } else {
-            success = await signUp(email, password);
-        }
-
-        if (success && isLoginMode) {
-            els.authModal.classList.remove('active');
-            els.emailInput.value = '';
-            els.passwordInput.value = '';
+            success = await signUp(username, password);
+            if (success) {
+                // 注册成功后切换到登录模式
+                isLoginMode = true;
+                updateAuthUI();
+            }
         }
     });
 

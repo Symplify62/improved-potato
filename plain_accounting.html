@@ -6,10 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>极简记账</title>
     <link rel="stylesheet" href="plain_style.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
     <div class="app-container">
+        <!-- 用户状态栏 -->
+        <div id="user-bar" class="user-bar">
+            <span id="user-info" class="user-info">未登录</span>
+            <button id="auth-btn" class="auth-btn">登录</button>
+        </div>
+
         <!-- 顶部概览区 -->
         <header class="app-header">
             <div class="balance-card">
@@ -64,7 +72,32 @@
                 </div>
             </div>
         </div>
+
+        <!-- 登录/注册弹窗 -->
+        <div id="auth-modal" class="modal-overlay">
+            <div class="modal-content auth-modal-content">
+                <div class="modal-header">
+                    <h2 id="auth-title">登录</h2>
+                    <button id="close-auth" class="close-btn">&times;</button>
+                </div>
+                <div class="form-container">
+                    <div class="input-group">
+                        <input type="email" id="email-input" placeholder="邮箱">
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password-input" placeholder="密码">
+                    </div>
+                    <button id="auth-submit" class="save-btn">登录</button>
+                    <p class="auth-switch">
+                        <span id="switch-text">没有账号？</span>
+                        <a href="#" id="switch-auth">注册</a>
+                    </p>
+                    <div id="auth-error" class="auth-error"></div>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="supabase.js"></script>
     <script src="plain_app.js"></script>
 </body>
 

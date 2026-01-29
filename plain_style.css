@@ -303,3 +303,67 @@ input {
 .save-btn:active {
     opacity: 0.8;
 }
+
+/* User Bar */
+.user-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.user-info {
+    font-size: 13px;
+    color: var(--text-sec);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+}
+
+.auth-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.auth-btn:hover {
+    opacity: 0.85;
+}
+
+/* Auth Modal */
+.auth-modal-content {
+    padding-bottom: 40px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--text-sec);
+}
+
+.auth-switch a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-error {
+    display: none;
+    margin-top: 16px;
+    padding: 12px;
+    background: #fff1f0;
+    border: 1px solid #ffa39e;
+    border-radius: 8px;
+    color: var(--expense);
+    font-size: 13px;
+    text-align: center;
+}
